@@ -1,14 +1,6 @@
 import { LitElement, html, css } from "lit";
 import "@haxtheweb/rpg-character";
 import "wired-elements";
-import { 
-  WiredButton,
-  WiredCard,
-  WiredCombo,
-  WiredItem,
-  WiredCheckbox,
-  WiredDivider 
-} from "wired-elements";
 
 export class RpgMeNew extends LitElement {
   static get tag() {
