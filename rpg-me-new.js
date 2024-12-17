@@ -12,17 +12,14 @@ export class RpgMeNew extends LitElement {
       seed: { type: String, reflect: true },
       literalseed: { type: Boolean, reflect: true },
       accessories: { type: Number },
-      base: { type: Number },
-      face: { type: Number },
-      faceitem: { type: Number },
-      hair: { type: Number },
       pants: { type: Number },
       shirt: { type: Number },
-      skin: { type: Number },
       hatcolor: { type: Number },
+      skinColor: { type: Number },
       hat: { type: String },
       fire: { type: Boolean },
       walking: { type: Boolean },
+      circle: { type: Boolean },
       height: { type: Number },
       width: { type: Number }
     };
@@ -33,17 +30,14 @@ export class RpgMeNew extends LitElement {
     this.seed = "";
     this.literalseed = false;
     this.accessories = 0;
-    this.base = 0;
-    this.face = 0;
-    this.faceitem = 0;
-    this.hair = 0;
     this.pants = 0;
     this.shirt = 0;
-    this.skin = 0;
     this.hatcolor = 0;
+    this.skinColor = 0;
     this.hat = "none";
     this.fire = false;
     this.walking = false;
+    this.circle = false;
     this.height = 500;
     this.width = 500;
   }
@@ -198,24 +192,21 @@ export class RpgMeNew extends LitElement {
   }
 
   generateLiteralSeed() {
-    return `${this.accessories}${this.base}${this.face}${this.faceitem}${this.hair}${this.pants}${this.shirt}${this.skin}${this.hatcolor}`;
+    return `${this.accessories}${this.pants}${this.shirt}${this.hatcolor}${this.skinColor}`;
   }
 
   reset() {
     this.seed = "";
     this.literalseed = false;
     this.accessories = 0;
-    this.base = 0;
-    this.face = 0;
-    this.faceitem = 0;
-    this.hair = 0;
     this.pants = 0;
     this.shirt = 0;
-    this.skin = 0;
     this.hatcolor = 0;
+    this.skinColor = 0;
     this.hat = "none";
     this.fire = false;
     this.walking = false;
+    this.circle = false;
   }
 
   shareOnTwitter() {
@@ -243,17 +234,14 @@ export class RpgMeNew extends LitElement {
                     .seed="${this.seed}"
                     ?literalseed="${this.literalseed}"
                     .accessories="${this.accessories}"
-                    .base="${this.base}"
-                    .face="${this.face}"
-                    .faceitem="${this.faceitem}"
-                    .hair="${this.hair}"
                     .pants="${this.pants}"
                     .shirt="${this.shirt}"
-                    .skin="${this.skin}"
-                    .hatcolor="${this.hatcolor}"
+                    hatcolor="${this.hatcolor}"
+                    .skinColor="${this.skinColor}"
                     .hat="${this.hat}"
                     ?fire="${this.fire}"
                     ?walking="${this.walking}"
+                    ?circle="${this.circle}"
                     .height="${this.height}"
                     .width="${this.width}"
                   ></rpg-character>
@@ -268,7 +256,7 @@ export class RpgMeNew extends LitElement {
           <section class="controls-section">
             <wired-card elevation="2">
               <div class="control-group">
-                <label class="control-label">Accessory Style</label>
+                <label class="control-label">Accessories</label>
                 <wired-combo
                   .selected="${this.accessories.toString()}"
                   @selected="${(e) => this.handlePropertyChange('accessories', parseInt(e.detail.selected))}"
@@ -280,19 +268,63 @@ export class RpgMeNew extends LitElement {
               </div>
 
               <div class="control-group">
+                <label class="control-label">Pants</label>
+                <wired-combo
+                  .selected="${this.pants.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('pants', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i + 1}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Shirt</label>
+                <wired-combo
+                  .selected="${this.shirt.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('shirt', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i + 1}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Skin Color</label>
+                <wired-combo
+                  .selected="${this.skinColor.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('skinColor', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Color ${i + 1}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
                 <label class="control-label">Hat Style</label>
                 <wired-combo
                   .selected="${this.hat}"
                   @selected="${(e) => this.handlePropertyChange('hat', e.detail.selected)}"
                 >
                   ${["none", "bunny", "coffee", "construction", "cowboy", 
-                    "education", "knight", "ninja", "party", "pirate", "watermelon"].map(hat => html`
+                    "education", "knight", "ninja", "party", "pirate", "watermelon", "random"].map(hat => html`
                     <wired-item value="${hat}">${hat.charAt(0).toUpperCase() + hat.slice(1)}</wired-item>
                   `)}
                 </wired-combo>
-              </div>
 
-              <wired-divider></wired-divider>
+                <label class="control-label">Hat Color</label>
+                <wired-combo
+                  .selected="${this.hatcolor.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('hatcolor', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Color ${i + 1}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
 
               <div class="control-group">
                 <div class="checkbox-group">
@@ -305,10 +337,13 @@ export class RpgMeNew extends LitElement {
                     ?checked="${this.walking}"
                     @change="${(e) => this.handlePropertyChange('walking', e.target.checked)}"
                   >Walking Animation</wired-checkbox>
+
+                  <wired-checkbox
+                    ?checked="${this.circle}"
+                    @change="${(e) => this.handlePropertyChange('circle', e.target.checked)}"
+                  >Circle Background</wired-checkbox>
                 </div>
               </div>
-
-              <wired-divider></wired-divider>
 
               <div class="actions">
                 <wired-button @click="${this.shareOnTwitter}">
