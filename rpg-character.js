@@ -1,347 +1,406 @@
-/**
- * Copyright 2022 The Pennsylvania State University
- * @license Apache-2.0, see License.md for full text.
- */
-import { html, css, svg, unsafeCSS } from "lit";
-import { SimpleColors } from "@haxtheweb/simple-colors/simple-colors.js";
-// default movement speed
-const defaultSpeed = 500;
-// default list of non-status related hats
-export const hatList = [
-  "bunny",
-  "coffee",
-  "construction",
-  "cowboy",
-  "education",
-  "knight",
-  "ninja",
-  "party",
-  "pirate",
-  "watermelon",
-];
+import { LitElement, html, css } from "lit";
+import "@haxtheweb/rpg-character";
+import "wired-elements";
 
-export const charBuilder = {
-  accessories: 9,
-  base: 1,
-  leg: ["", "R", "L"],
-  face: 5,
-  faceItem: 9,
-  hair: 9,
-  pants: 9,
-  shirt: 9,
-  skin: 9,
-  hatColor: 9,
-};
-/**
- * `rpg-character`
- * `Little RPG character that&#39;s remixable`
- * @demo demo/index.html
- * @element rpg-character
- */
-class RpgCharacter extends SimpleColors {
-  /**
-   * Convention we use
-   */
+export class RpgMeNew extends LitElement {
   static get tag() {
-    return "rpg-character";
-  }
-  /**
-   * HTMLElement
-   */
-  constructor() {
-    super();
-    this.literalseed = false;
-    this.height = 142;
-    this.width = 113;
-    this.accessories = 0;
-    this.base = 0;
-    this.face = 0;
-    this.faceItem = 0;
-    this.hair = 0;
-    this.pants = 0;
-    this.shirt = 0;
-    this.skin = 0;
-    this.accentColor = "orange";
-    this.seed = null;
-    this.walking = false;
-    this.leg = "";
-    this.speed = 500;
-    this.__walkingTimeout = null;
-    this.circle = false;
-    this.hat = "none";
-    this.hatColor = 0;
-    this.demo = false;
-    this.fire = false;
-    if (globalThis.matchMedia) {
-      this.reduceMotion = globalThis.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-    }
-  }
-
-  randomColor(seed = null) {
-    if (seed === null) {
-      seed = "" + Math.floor(Math.random() * Object.keys(this.colors).length);
-    }
-    return Object.keys(this.colors)[seed];
+    return "rpg-me-new";
   }
 
   static get properties() {
     return {
-      ...super.properties,
-      literalseed: { type: Boolean },
+      seed: { type: String, reflect: true },
+      literalseed: { type: Boolean, reflect: true },
       accessories: { type: Number },
-      height: { type: Number },
-      width: { type: Number },
       base: { type: Number },
       face: { type: Number },
       faceItem: { type: Number },
       hair: { type: Number },
       pants: { type: Number },
       shirt: { type: Number },
-      skin: { type: Number },
+      skin: { type: Number }, 
       hatColor: { type: Number },
       hat: { type: String },
-      walking: { type: Boolean, reflect: true },
-      leg: { type: String },
-      seed: { type: String, reflect: true },
-      speed: { type: Number },
-      circle: { type: Boolean, reflect: true },
-      fire: { type: Boolean, reflect: true },
-      demo: { type: Boolean },
-      reduceMotion: { type: Boolean },
+      fire: { type: Boolean },
+      walking: { type: Boolean },
+      circle: { type: Boolean },
+      height: { type: Number },
+      width: { type: Number }
     };
   }
-  /**
-   * LitElement style callback
-   */
+
+  constructor() {
+    super();
+    this.seed = "";
+    this.literalseed = false;
+    this.accessories = 0;
+    this.base = 1;
+    this.face = 0;
+    this.faceItem = 0;
+    this.hair = 0;
+    this.pants = 0;
+    this.shirt = 0;
+    this.skin = 0; 
+    this.hatColor = 0;
+    this.hat = "none";
+    this.fire = false;
+    this.walking = false;
+    this.circle = false;
+    this.height = 500;
+    this.width = 500;
+  }
+
   static get styles() {
-    // support for using in other classes
-    let styles = [];
-    if (super.styles) {
-      styles = super.styles;
-    }
-    return [
-      styles,
-      css`
-        :host {
-          display: inline-block;
-          margin: 0;
-          padding: 0;
-          text-align: initial;
-          position: relative;
+    return css`
+      :host {
+        display: block;
+        --primary-bg: #ffffff;
+        --secondary-bg: #f5f5f5;
+        --accent-color: #4a90e2;
+        --text-primary: #2c3e50;
+        --text-secondary: #6c757d;
+        --spacing-unit: 8px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: calc(var(--spacing-unit) * 4);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: calc(var(--spacing-unit) * 6);
+      }
+
+      .title {
+        font-size: 2.5rem;
+        color: var(--text-primary);
+        margin: 0;
+        margin-bottom: calc(var(--spacing-unit) * 2);
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin: 0;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: calc(var(--spacing-unit) * 4);
+        margin-bottom: calc(var(--spacing-unit) * 4);
+      }
+
+      @media (min-width: 768px) {
+        .layout {
+          grid-template-columns: 1.2fr 0.8fr;
         }
-        svg,
-        img {
-          position: absolute;
-          margin: 0;
-          padding: 0;
-          text-align: initial;
-        }
-        div {
-          transition: 0.3s ease-in-out background-color;
-          margin: 0;
-          padding: 0;
-          text-align: initial;
-        }
-        #demo {
-          height: 30px;
-          padding-top: 10px;
-          text-align: center;
-          background-color: black;
-          color: white;
-          font-weight: bold;
-        }
-      `,
-    ];
-  }
-  firstUpdated(changedProperties) {
-    if (super.firstUpdated) {
-      super.firstUpdated(changedProperties);
-    }
-    if (this.seed === null) {
-      this.seed = Math.random().toString(36).substring(2, 12);
-    }
-  }
-  /**
-   * LitElement render callback
-   */
-  render() {
-    const accessories = new URL(
-      `./lib/accessories/${this.accessories}.svg`,
-      import.meta.url,
-    ).href;
-    const base = new URL(
-      `./lib/base/${this.base}${this.leg}.svg`,
-      import.meta.url,
-    ).href;
-    const leg = new URL(`./lib/base/${this.leg}.svg`, import.meta.url).href;
-    const face = new URL(`./lib/face/${this.face}.svg`, import.meta.url).href;
-    const faceItem = new URL(
-      `./lib/faceItem/${this.faceItem}.svg`,
-      import.meta.url,
-    ).href;
-    const hair = new URL(`./lib/hair/${this.hair}.svg`, import.meta.url).href;
-    const pants = new URL(`./lib/pants/${this.pants}.svg`, import.meta.url)
-      .href;
-    const shirt = new URL(`./lib/shirt/${this.shirt}.svg`, import.meta.url)
-      .href;
-    const skin = new URL(`./lib/skin/${this.skin}.svg`, import.meta.url).href;
-    let hatFileName = this.hat;
-    // special cases to change hat from the one requested
-    if (this.fire && this.hat === "none") {
-      hatFileName = "coffee";
-    } else if (this.hat === "random") {
-      hatFileName = hatList[Math.floor(Math.random() * hatList.length)];
-    }
-    const hat = new URL(`./lib/hat/${hatFileName}.svg`, import.meta.url).href;
-    const hatColor = new URL(
-      `./lib/hatColor/${this.hatColor}.svg`,
-      import.meta.url,
-    ).href;
-    const fire = new URL(`./lib/base/fire.svg`, import.meta.url).href;
-    const circle = new URL(`./lib/circle.svg`, import.meta.url).href;
-    return html`
-      <div class="wrapper">
-        ${this.renderPiece(skin)}
-        ${this.base === 1 ? this.renderPiece(hair) : ``}
-        ${this.renderPiece(face)} ${this.renderPiece(faceItem)}
-        ${this.renderPiece(shirt)} ${this.renderPiece(pants)}
-        ${this.renderPiece(accessories)} ${this.renderPiece(base)}
-        ${this.leg !== "" ? this.renderPiece(leg) : ``}
-        ${this.renderPiece(hatColor)} ${this.fire ? this.renderPiece(fire) : ``}
-        ${hatFileName !== "none" ? this.renderPiece(hat) : ``}
-        ${this.circle ? this.renderPiece(circle) : ``}
-      </div>
-      ${this.demo ? html`<div id="demo">${this.seed}</div>` : ``}
-      <style>
-        #cardcircle {
-          fill: var(
-            --simple-colors-default-theme-${this.accentColor}-8,
-            var(--simple-colors-default-theme-accent-8, yellow)
-          );
-        }
-        div {
-          width: ${this.width + "px"};
-        }
-        .wrapper {
-          height: ${this.height + "px"};
-        }
-      </style>
+      }
+
+      .preview-section {
+        background: var(--primary-bg);
+        border-radius: calc(var(--spacing-unit) * 2);
+        padding: calc(var(--spacing-unit) * 4);
+      }
+
+      .character-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: calc(var(--spacing-unit) * 3);
+      }
+
+      .character-preview {
+        width: 100%;
+        max-width: 600px;
+        aspect-ratio: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--secondary-bg);
+        border-radius: calc(var(--spacing-unit) * 2);
+      }
+
+      .seed-display {
+        font-family: monospace;
+        font-size: 1rem;
+        color: var(--text-secondary);
+        background: var(--secondary-bg);
+        padding: calc(var(--spacing-unit) * 1.5);
+        border-radius: calc(var(--spacing-unit));
+        text-align: center;
+        width: 100%;
+      }
+
+      .controls-section {
+        background: var(--secondary-bg);
+        border-radius: calc(var(--spacing-unit) * 2);
+        padding: calc(var(--spacing-unit) * 4);
+      }
+
+      .control-group {
+        margin-bottom: calc(var(--spacing-unit) * 4);
+      }
+
+      .control-label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: calc(var(--spacing-unit) * 2);
+      }
+
+      wired-combo {
+        width: 100%;
+        margin-bottom: calc(var(--spacing-unit) * 2);
+      }
+
+      .checkbox-group {
+        display: flex;
+        gap: calc(var(--spacing-unit) * 4);
+        margin: calc(var(--spacing-unit) * 3) 0;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(var(--spacing-unit) * 2);
+        justify-content: center;
+        margin-top: calc(var(--spacing-unit) * 4);
+      }
     `;
   }
 
-  renderPiece(piece) {
-    return svg`
-    <svg xmlns="http://www.w3.org/2000/svg" part="rpg-character-item" viewBox="0 0 ${this.width} ${this.height}" preserveAspectRatio="xMidYMid meet">
-      <image
-        href="${piece}"
-        width="${this.width}px"
-        height="${this.height}px"
-        focusable="false"
-        preserveAspectRatio="xMidYMid meet"
-      ></image>
-    </svg>`;
+  handlePropertyChange(prop, value) {
+    this[prop] = value;
+    this.requestUpdate();
+    this.dispatchEvent(new CustomEvent('character-updated', {
+      detail: {
+        property: prop,
+        value: value
+      },
+      bubbles: true,
+      composed: true
+    }));
   }
 
-  updated(changedProperties) {
-    if (super.updated) {
-      super.updated(changedProperties);
-    }
-    changedProperties.forEach((oldValue, propName) => {
-      if (propName === "fire") {
-        this.speed = this[propName] ? 100 : defaultSpeed;
-      }
-      if (propName === "demo") {
-        if (this[propName]) {
-          this.shadowRoot
-            .querySelector(".wrapper")
-            .addEventListener("click", (e) => {
-              this.seed = Math.random().toString(36).substring(2, 12);
-            });
-        } else {
-          this.shadowRoot
-            .querySelector(".wrapper")
-            .removeEventListener("click", (e) => {
-              e.target.seed = Math.random().toString(36).substring(2, 12);
-            });
-        }
-      }
-      if (
-        (propName === "leg" || propName === "walking") &&
-        this.walking &&
-        !this.reduceMotion
-      ) {
-        clearTimeout(this.__walkingTimeout);
-        this.__walkingTimeout = setTimeout(() => {
-          switch (this.leg) {
-            case "":
-              this.leg = "R";
-              break;
-            case "R":
-              this.leg = "L";
-              break;
-            case "L":
-              this.leg = "";
-              break;
-          }
-        }, this.speed);
-      }
-      if (propName === "seed" && this[propName]) {
-        // use the seed to generate a random number
-        let seed = 54;
-        for (let i = 0; i < this.seed.length; i++) {
-          // hard limit of 64 to be safe bc of calculation since seed is supposed to be like a name
-          if (i < 64) {
-            seed *= this.seed.charCodeAt(i);
-          }
-        }
-        const funKeys = {
-          zpg: "7501517984378880262144",
-          edtechjoker: "712215550",
-          btopro: "7122155501",
-        };
-        // ensure huge numbers dont bust JS max
-        seed = BigInt(seed).toString();
-        if (Object.keys(funKeys).includes(this[propName])) {
-          seed = funKeys[this[propName]];
-        }
-        // support a literal seed value which is numerical selection of each of these in order
-        if (this.literalseed) {
-          seed = BigInt(this.seed).toString();
-        }
-        Object.keys(charBuilder).forEach((trait, key) => {
-          if (seed[key] !== undefined) {
-            if (trait === "leg") {
-              this[trait] =
-                charBuilder[trait][
-                  Math.floor(
-                    Math.random() * Object.keys(charBuilder[trait]).length,
-                  )
-                ];
-            }
-            // base needs to be even 50/50 split
-            else if (trait === "base") {
-              this[trait] = seed[key] >= 5 ? 1 : 0;
-            } else if (trait === "face") {
-              this[trait] = seed[key] > 5 ? 1 : seed[key];
-            } else {
-              this[trait] = seed[key];
-            }
-          } else {
-            this[trait] = 0;
-          }
-        });
-      }
-    });
+  generateLiteralSeed() {
+    return `${this.accessories}${this.face}${this.faceItem}${this.hair}${this.pants}${this.shirt}${this.skin}${this.hatColor}`;
   }
-  /**
-   * haxProperties integration via file reference
-   */
-  static get haxProperties() {
-    return new URL(`./lib/${this.tag}.haxProperties.json`, import.meta.url)
-      .href;
+
+  reset() {
+    this.seed = "";
+    this.literalseed = false;
+    this.accessories = 0;
+    this.base = 1;
+    this.face = 0;
+    this.faceItem = 0;
+    this.hair = 0;
+    this.pants = 0;
+    this.shirt = 0;
+    this.skin = 0; 
+    this.hatColor = 0;
+    this.hat = "none";
+    this.fire = false;
+    this.walking = false;
+    this.circle = false;
+  }
+
+  shareOnTwitter() {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out my RPG character!')}&url=${encodeURIComponent(window.location.href)}`);
+  }
+
+  shareOnLinkedIn() {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`);
+  }
+
+  render() {
+    return html`
+      <div class="container">
+        <header class="header">
+          <h1 class="title">RPG Character Creator</h1>
+          <p class="subtitle">Design your own unique RPG character!</p>
+        </header>
+        
+        <div class="layout">
+          <section class="preview-section">
+            <wired-card elevation="3">
+              <div class="character-container">
+                <div class="character-preview">
+                  <rpg-character
+                    .seed="${this.seed}"
+                    ?literalseed="${this.literalseed}"
+                    .accessories="${this.accessories}"
+                    .base="${this.base}"
+                    .face="${this.face}"
+                    .faceItem="${this.faceItem}"
+                    .hair="${this.hair}"
+                    .pants="${this.pants}"
+                    .shirt="${this.shirt}"
+                    .skin="${this.skin}"
+                    .hatColor="${this.hatColor}"
+                    .hat="${this.hat}"
+                    ?fire="${this.fire}"
+                    ?walking="${this.walking}"
+                    ?circle="${this.circle}"
+                    .height="${this.height}"
+                    .width="${this.width}"
+                  ></rpg-character>
+                </div>
+                <div class="seed-display">
+                  Character Seed: ${this.seed || this.generateLiteralSeed() || 'Generate a character to see seed'}
+                </div>
+              </div>
+            </wired-card>
+          </section>
+
+          <section class="controls-section">
+            <wired-card elevation="2">
+              <div class="control-group">
+                <label class="control-label">Face (0-5)</label>
+                <wired-combo
+                  .selected="${this.face.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('face', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(6)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Face Item (0-9)</label>
+                <wired-combo
+                  .selected="${this.faceItem.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('faceItem', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Hair (0-9)</label>
+                <wired-combo
+                  .selected="${this.hair.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('hair', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Accessories (0-9)</label>
+                <wired-combo
+                  .selected="${this.accessories.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('accessories', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Pants (0-9)</label>
+                <wired-combo
+                  .selected="${this.pants.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('pants', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Shirt (0-9)</label>
+                <wired-combo
+                  .selected="${this.shirt.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('shirt', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Style ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Skin Color (0-9)</label>
+                <wired-combo
+                  .selected="${this.skin.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('skin', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Color ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Hat Style</label>
+                <wired-combo
+                  .selected="${this.hat}"
+                  @selected="${(e) => this.handlePropertyChange('hat', e.detail.selected)}"
+                >
+                  ${["none", "bunny", "coffee", "construction", "cowboy", 
+                    "education", "knight", "ninja", "party", "pirate", "watermelon", "random"].map(hat => html`
+                    <wired-item value="${hat}">${hat.charAt(0).toUpperCase() + hat.slice(1)}</wired-item>
+                  `)}
+                </wired-combo>
+
+                <label class="control-label">Hat Color (0-9)</label>
+                <wired-combo
+                  .selected="${this.hatColor.toString()}"
+                  @selected="${(e) => this.handlePropertyChange('hatColor', parseInt(e.detail.selected))}"
+                >
+                  ${[...Array(10)].map((_, i) => html`
+                    <wired-item value="${i}">Color ${i}</wired-item>
+                  `)}
+                </wired-combo>
+              </div>
+
+              <div class="control-group">
+                <div class="checkbox-group">
+                  <wired-checkbox
+                    ?checked="${this.fire}"
+                    @change="${(e) => this.handlePropertyChange('fire', e.target.checked)}"
+                  >Fire Effect</wired-checkbox>
+                  
+                  <wired-checkbox
+                    ?checked="${this.walking}"
+                    @change="${(e) => this.handlePropertyChange('walking', e.target.checked)}"
+                  >Walking Animation</wired-checkbox>
+
+                  <wired-checkbox
+                    ?checked="${this.circle}"
+                    @change="${(e) => this.handlePropertyChange('circle', e.target.checked)}"
+                  >Circle Background</wired-checkbox>
+                </div>
+              </div>
+
+              <div class="actions">
+                <wired-button @click="${this.shareOnTwitter}">
+                  Share on X
+                </wired-button>
+                <wired-button @click="${this.shareOnLinkedIn}">
+                  Share on LinkedIn
+                </wired-button>
+                <wired-button @click="${this.reset}">
+                  Reset Character
+                </wired-button>
+              </div>
+            </wired-card>
+          </section>
+        </div>
+      </div>
+    `;
   }
 }
-customElements.define(RpgCharacter.tag, RpgCharacter);
-export { RpgCharacter };
+
+customElements.define(RpgMeNew.tag, RpgMeNew);
