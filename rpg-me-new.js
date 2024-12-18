@@ -354,7 +354,7 @@ export class RpgMeNew extends LitElement {
                   `)}
                 </wired-combo>
 
-                <label class="control-label">Hat Color (0-9)</label>
+                <label class="control-label">Hat Color </label>
                 <wired-combo
                   .selected="${this.hatcolor.toString()}"
                   @selected="${(e) => this.handlePropertyChange('hatcolor', parseInt(e.detail.selected))}"
